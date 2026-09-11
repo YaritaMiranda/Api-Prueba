@@ -1,9 +1,13 @@
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using UserCurrencyApi.Application.Addresses.Commands;
+using UserCurrencyApi.Application.Addresses.Queries;
+using UserCurrencyApi.Application.Addresses.Validators;
 using UserCurrencyApi.Application.Users.Commands;
 using UserCurrencyApi.Application.Users.Queries;
 using UserCurrencyApi.Application.Users.Validators;
+using UserCurrencyApi.Contracts.Addresses;
 using UserCurrencyApi.Contracts.Users;
 using UserCurrencyApi.Endpoints;
 using UserCurrencyApi.Infrastructure.Data;
@@ -51,12 +55,22 @@ builder.Services.AddSingleton<DatabaseInitializer>();
 builder.Services.AddScoped<IValidator<CreateUserRequest>, CreateUserRequestValidator>();
 builder.Services.AddScoped<IValidator<UpdateUserRequest>, UpdateUserRequestValidator>();
 builder.Services.AddScoped<IValidator<BulkCreateUsersRequest>, BulkCreateUsersRequestValidator>();
+
+builder.Services.AddScoped<IValidator<CreateAddressRequest>, CreateAddressRequestValidator>();
+builder.Services.AddScoped<IValidator<UpdateAddressRequest>, UpdateAddressRequestValidator>();
+
+
 builder.Services.AddScoped<CreateUserCommandHandler>();
 builder.Services.AddScoped<UpdateUserCommandHandler>();
 builder.Services.AddScoped<DeleteUserCommandHandler>();
 builder.Services.AddScoped<BulkCreateUsersCommandHandler>();
 builder.Services.AddScoped<GetUsersQueryHandler>();
 builder.Services.AddScoped<GetUserByIdQueryHandler>();
+
+builder.Services.AddScoped<CreateAddressCommandHandler>();
+builder.Services.AddScoped<UpdateAddressCommandHandler>();
+builder.Services.AddScoped<DeleteAddressCommandHandler>();
+builder.Services.AddScoped<GetUserAddressesQueryHandler>();
 
 
 var app = builder.Build();
@@ -73,6 +87,7 @@ app.UseSwaggerUI();
 app.UseMiddleware<ApiKeyMiddleware>();
 
 app.MapUserEndpoints();
+app.MapAddressEndpoints();
 
 app.UseHttpsRedirection();
 
