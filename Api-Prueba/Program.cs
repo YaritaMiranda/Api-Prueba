@@ -4,10 +4,15 @@ using Microsoft.OpenApi.Models;
 using UserCurrencyApi.Application.Addresses.Commands;
 using UserCurrencyApi.Application.Addresses.Queries;
 using UserCurrencyApi.Application.Addresses.Validators;
+using UserCurrencyApi.Application.Currencies.Commands;
+using UserCurrencyApi.Application.Currencies.Queries;
+using UserCurrencyApi.Application.Currencies.Validators;
+using UserCurrencyApi.Application.CurrencyConversion;
 using UserCurrencyApi.Application.Users.Commands;
 using UserCurrencyApi.Application.Users.Queries;
 using UserCurrencyApi.Application.Users.Validators;
 using UserCurrencyApi.Contracts.Addresses;
+using UserCurrencyApi.Contracts.Currencies;
 using UserCurrencyApi.Contracts.Users;
 using UserCurrencyApi.Endpoints;
 using UserCurrencyApi.Infrastructure.Data;
@@ -59,6 +64,8 @@ builder.Services.AddScoped<IValidator<BulkCreateUsersRequest>, BulkCreateUsersRe
 builder.Services.AddScoped<IValidator<CreateAddressRequest>, CreateAddressRequestValidator>();
 builder.Services.AddScoped<IValidator<UpdateAddressRequest>, UpdateAddressRequestValidator>();
 
+builder.Services.AddScoped<IValidator<CreateCurrencyRequest>, CreateCurrencyRequestValidator>();
+builder.Services.AddScoped<IValidator<ConvertCurrencyRequest>, ConvertCurrencyRequestValidator>();
 
 builder.Services.AddScoped<CreateUserCommandHandler>();
 builder.Services.AddScoped<UpdateUserCommandHandler>();
@@ -71,6 +78,10 @@ builder.Services.AddScoped<CreateAddressCommandHandler>();
 builder.Services.AddScoped<UpdateAddressCommandHandler>();
 builder.Services.AddScoped<DeleteAddressCommandHandler>();
 builder.Services.AddScoped<GetUserAddressesQueryHandler>();
+
+builder.Services.AddScoped<GetCurrenciesQueryHandler>();
+builder.Services.AddScoped<CreateCurrencyCommandHandler>();
+builder.Services.AddScoped<ConvertCurrencyCommandHandler>();
 
 
 var app = builder.Build();
@@ -88,6 +99,7 @@ app.UseMiddleware<ApiKeyMiddleware>();
 
 app.MapUserEndpoints();
 app.MapAddressEndpoints();
+app.MapCurrencyEndpoints();
 
 app.UseHttpsRedirection();
 
