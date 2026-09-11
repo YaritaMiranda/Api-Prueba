@@ -1,0 +1,107 @@
+using FluentValidation;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
+using UserCurrencyApi.Application.Addresses.Commands;
+using UserCurrencyApi.Application.Addresses.Queries;
+using UserCurrencyApi.Application.Addresses.Validators;
+using UserCurrencyApi.Application.Currencies.Commands;
+using UserCurrencyApi.Application.Currencies.Queries;
+using UserCurrencyApi.Application.Currencies.Validators;
+using UserCurrencyApi.Application.CurrencyConversion;
+using UserCurrencyApi.Application.Users.Commands;
+using UserCurrencyApi.Application.Users.Queries;
+using UserCurrencyApi.Application.Users.Validators;
+using UserCurrencyApi.Contracts.Addresses;
+using UserCurrencyApi.Contracts.Currencies;
+using UserCurrencyApi.Contracts.Users;
+using UserCurrencyApi.Endpoints;
+using UserCurrencyApi.Infrastructure.Data;
+using UserCurrencyApi.Infrastructure.Security;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
+    {
+        Name = ApiKeyMiddleware.HeaderName,
+        Type = SecuritySchemeType.ApiKey,
+        In = ParameterLocation.Header,
+        Description = "Ingrese la API-KEY"
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "ApiKey"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
+
+builder.Services.AddDbContextFactory<AppDbContext>(options =>
+{
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+        ?? "Data Source=user_currency.db";
+
+    options.UseSqlite(connectionString, sqliteOptions => sqliteOptions.CommandTimeout(30));
+});
+
+builder.Services.AddSingleton<DatabaseInitializer>();
+
+builder.Services.AddScoped<IValidator<CreateUserRequest>, CreateUserRequestValidator>();
+builder.Services.AddScoped<IValidator<UpdateUserRequest>, UpdateUserRequestValidator>();
+builder.Services.AddScoped<IValidator<BulkCreateUsersRequest>, BulkCreateUsersRequestValidator>();
+
+builder.Services.AddScoped<IValidator<CreateAddressRequest>, CreateAddressRequestValidator>();
+builder.Services.AddScoped<IValidator<UpdateAddressRequest>, UpdateAddressRequestValidator>();
+
+builder.Services.AddScoped<IValidator<CreateCurrencyRequest>, CreateCurrencyRequestValidator>();
+builder.Services.AddScoped<IValidator<ConvertCurrencyRequest>, ConvertCurrencyRequestValidator>();
+
+builder.Services.AddScoped<CreateUserCommandHandler>();
+builder.Services.AddScoped<UpdateUserCommandHandler>();
+builder.Services.AddScoped<DeleteUserCommandHandler>();
+builder.Services.AddScoped<BulkCreateUsersCommandHandler>();
+builder.Services.AddScoped<GetUsersQueryHandler>();
+builder.Services.AddScoped<GetUserByIdQueryHandler>();
+
+builder.Services.AddScoped<CreateAddressCommandHandler>();
+builder.Services.AddScoped<UpdateAddressCommandHandler>();
+builder.Services.AddScoped<DeleteAddressCommandHandler>();
+builder.Services.AddScoped<GetUserAddressesQueryHandler>();
+
+builder.Services.AddScoped<GetCurrenciesQueryHandler>();
+builder.Services.AddScoped<CreateCurrencyCommandHandler>();
+builder.Services.AddScoped<ConvertCurrencyCommandHandler>();
+
+
+var app = builder.Build();
+
+await using (var scope = app.Services.CreateAsyncScope())
+{
+    var initializer = scope.ServiceProvider.GetRequiredService<DatabaseInitializer>();
+    await initializer.InitializeAsync();
+}
+
+app.UseSwagger();
+app.UseSwaggerUI();
+
+app.UseMiddleware<ApiKeyMiddleware>();
+
+app.MapUserEndpoints();
+app.MapAddressEndpoints();
+app.MapCurrencyEndpoints();
+
+app.UseHttpsRedirection();
+
+app.Run();
+
