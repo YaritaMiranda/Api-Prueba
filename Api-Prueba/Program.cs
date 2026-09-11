@@ -1,5 +1,11 @@
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using UserCurrencyApi.Application.Users.Commands;
+using UserCurrencyApi.Application.Users.Queries;
+using UserCurrencyApi.Application.Users.Validators;
+using UserCurrencyApi.Contracts.Users;
+using UserCurrencyApi.Endpoints;
 using UserCurrencyApi.Infrastructure.Data;
 using UserCurrencyApi.Infrastructure.Security;
 
@@ -42,6 +48,17 @@ builder.Services.AddDbContextFactory<AppDbContext>(options =>
 
 builder.Services.AddSingleton<DatabaseInitializer>();
 
+builder.Services.AddScoped<IValidator<CreateUserRequest>, CreateUserRequestValidator>();
+builder.Services.AddScoped<IValidator<UpdateUserRequest>, UpdateUserRequestValidator>();
+builder.Services.AddScoped<IValidator<BulkCreateUsersRequest>, BulkCreateUsersRequestValidator>();
+builder.Services.AddScoped<CreateUserCommandHandler>();
+builder.Services.AddScoped<UpdateUserCommandHandler>();
+builder.Services.AddScoped<DeleteUserCommandHandler>();
+builder.Services.AddScoped<BulkCreateUsersCommandHandler>();
+builder.Services.AddScoped<GetUsersQueryHandler>();
+builder.Services.AddScoped<GetUserByIdQueryHandler>();
+
+
 var app = builder.Build();
 
 await using (var scope = app.Services.CreateAsyncScope())
@@ -54,6 +71,8 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 app.UseMiddleware<ApiKeyMiddleware>();
+
+app.MapUserEndpoints();
 
 app.UseHttpsRedirection();
 
