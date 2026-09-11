@@ -1,0 +1,20 @@
+{
+  "users": [
+    {
+      "name": "Ana Gomez",
+      "email": "ana.gomez@test.com"
+    },
+    {
+      "name": "Luis Duarte",
+      "email": "luis.duarte@test.com"
+    },
+    {
+      "name": "Marta Silva",
+      "email": "marta.silva@test.com"
+    },
+    {
+      "name": "Carlos Rios",
+      "email": "carlos.rios@test.com"
+    }
+  ]
+}
