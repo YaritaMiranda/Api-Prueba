@@ -1,4 +1,6 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using UserCurrencyApi.Infrastructure.Data;
 using UserCurrencyApi.Infrastructure.Security;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -30,7 +32,23 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+builder.Services.AddDbContextFactory<AppDbContext>(options =>
+{
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+        ?? "Data Source=user_currency.db";
+
+    options.UseSqlite(connectionString, sqliteOptions => sqliteOptions.CommandTimeout(30));
+});
+
+builder.Services.AddSingleton<DatabaseInitializer>();
+
 var app = builder.Build();
+
+await using (var scope = app.Services.CreateAsyncScope())
+{
+    var initializer = scope.ServiceProvider.GetRequiredService<DatabaseInitializer>();
+    await initializer.InitializeAsync();
+}
 
 app.UseSwagger();
 app.UseSwaggerUI();
